@@ -1,0 +1,26 @@
+<%- include header %>
+<form method="post">
+
+  mac：  <input type="text" name="mac"/><br />
+           <input type="submit" value="查詢"/>
+</form>
+
+<%- include footer %>
+<% if (devices) { %>
+    <table width=“500" border="1">
+	<tr>
+		<td>mac位址</td>
+		<td>資料</td>
+		<td>接收時間</td>
+		<td>上傳時間</td>
+	</tr>	
+	<% devices.forEach(function(device) { %>
+		<tr>
+		<td><%= device.macAddr %></td>
+		<td><%= device.data %></td>
+		<td><%= device.recv_at %></td>
+		<td><%= device.created_at %></td>
+		</tr>				
+	<% }); %>
+	</table>
+<% } %>
