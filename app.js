@@ -6,6 +6,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var todos = require('./routes/todos');//Jason add on 2016.09.26
 var routes = require('./routes/index');
+var todos = require('./routes/todos');//Jason add on 2017.02.21
 //Jason add on 2017.02.16 - start
 var RED = require("node-red");
 var http = require('http'),
@@ -36,15 +37,20 @@ app.use(session({
   resave: false,
   saveUninitialized: true
 }));
+app.use('/todos', todos);
 routes(app);
 var server = http.createServer(app);
 
 // Create the settings object - see default settings.js file for other options
 var setting = {
     httpAdminRoot:"/red",
-    httpNodeRoot: "/api",
+    httpNodeRoot: "/",
     userDir:"./.nodered/",
-    functionGlobalContext: { }    // enables global context
+    functionGlobalContext: {
+      momentModule:require("moment"),
+      deviceDbTools:require("./models/deviceDbTools.js"),
+      msgTools:require("./models/msgTools.js")
+    }    // enables global context
 };
 
 // Initialise the runtime with a server and settings

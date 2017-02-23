@@ -119,7 +119,7 @@ exports.getType = function (p) {
     else return 'other';
 }
 
-exports.isEmpty = function isEmpty(obj) {
+exports.isEmpty = function (obj) {
     for(var prop in obj) {
         if(obj.hasOwnProperty(prop))
             return false;

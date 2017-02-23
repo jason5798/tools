@@ -2,8 +2,6 @@ var express = require('express');
 var router = express.Router();
 //var UnitDbTools = require('../models/unitDbTools.js');
 var DeviceDbTools = require('../models/deviceDbTools.js');
-//var async = require('async');
-var DeviceDbTools = require('../models/deviceDbTools.js');
 var moment = require('moment');
 
 router.route('/devices')
@@ -48,7 +46,7 @@ router.route('/devices/:mac')
 
 	// update the bear with this id
 	.put(function(req, res) {
-		Bear.findById(req.params.bear_id, function(err, bear) {
+		/*Bear.findById(req.params.bear_id, function(err, bear) {
 
 			if (err)
 				res.send(err);
@@ -61,19 +59,19 @@ router.route('/devices/:mac')
 				res.json({ message: 'Bear updated!' });
 			});
 
-		});
+		});*/
 	})
 
 	// delete the bear with this id
 	.delete(function(req, res) {
-		Bear.remove({
+		/*Bear.remove({
 			_id: req.params.bear_id
 		}, function(err, bear) {
 			if (err)
 				res.send(err);
 
 			res.json({ message: 'Successfully deleted' });
-		});
+		});*/
 	});
 
 module.exports = router;

@@ -3,43 +3,18 @@ var JsonFileTools =  require('./jsonFileTools.js');
 var Tools = require('./tools.js');
 var moment = require('moment');
 
-function toGetInfoByData(mac,data){
-    var info = {};
-    //Jason test
-    var flag = 0;//value/10 for old
-    var tag = data.substring(0,4);
-    if(tag == 'aa00'){
-        flag = 0;
-    }else if(tag == 'aa01'){
-        flag = 1;
-    }else if(tag == 'aa02'){
-        flag = 2;
-    }else if(tag == 'aa03'){
-        flag = 3;
-    }else if(tag == 'aa04'){
-        flag = 4;
-    }else if(tag == 'aa05'){
-        flag = 5;
-    }
-    var arrData =Tools.getDataArray(flag,data);
-    for(var i = 0;i<arrData.length ;i++){
-        var a = 'data' + i;
-        info[a] = arrData[i];
-    }
-    return info;
-}
+
 exports.saveDeviceMsg = function (obj,callback) {
-     
+
     var now = moment().toDate();
     console.log(now + ' Debug : saveDeviceMsg');
-    
+
     var newDevice = new DeviceModel({
         macAddr    : obj.mac,
-        index      : obj.type,
         data       : obj.data,
-        info       : obj.information,
-        recv_at    : obj.recv,
-        time       : obj.date
+        recv       : obj.recv,
+        date       : obj.date,
+        info       : obj.information
     });
 
     console.log('$$$$ DeviceModel : '+JSON.stringify(newDevice));
@@ -55,88 +30,6 @@ exports.saveDeviceMsg = function (obj,callback) {
     });
 };
 
-exports.saveDeviceInfo = function (mMac,mData,mInfo,mRecv,callback) {
-    var now = moment().toDate();
-    console.log(now + ' Debug : saveDeviceInfo');
-    var momObj = moment(mRecv);
-    var mTime =  momObj.format('YYYY-MM-DD HH:mm:ss');
-    var mIndex = mData.substring(0,4);
-    console.log('toSaveDevice mRecv : '+mRecv);
-    console.log('toSaveDevice mTime : '+mTime);
-
-    var newDevice = new DeviceModel({
-        macAddr    : mMac,
-        index      : mIndex,
-        data       : mData,
-        info       : mInfo,
-        recv_at    : mRecv,
-        time       : mTime
-    });
-
-    console.log('$$$$ DeviceModel : '+JSON.stringify(newDevice));
-
-
-    newDevice.save(function(err){
-        var now = moment().format('YYYY-MM-DD HH:mm:ss');
-        if(err){
-            console.log(now + ' Debug : Device save fail!');
-            return callback(err);
-        }else{
-            console.log(now + ' Debug : Device save success!');
-            return callback(err,"OK");
-        }
-    });
-};
-
-exports.saveDevice = function (macAddress,data,recv,callback) {
-    var mRecv = new Date(recv);
-    var info = toGetInfoByData(macAddress,data);
-
-    var index = data.substring(0,4);
-    var tag = parseInt(data.substring(4,6),16);
-
-    //console.log('macAddress:'+macAddress);
-    //console.log('mRecv:'+ mRecv);
-    console.log('info:'+JSON.stringify( info));
-
-    if(isEmpty(info)){
-       return callback('Data is not correct!!!');
-    }
-
-
-    var time = {
-        date   : moment(recv).format('YYYY-MM-DD HH:mm:ss'),
-        /*year   : moment(recv).format("YYYY"),
-        month  : moment(recv).format("YYYY-MM"),
-        day    : moment(recv).format("YYYY-MM-DD"),
-        hour   : moment(recv).format("YYYY-MM-DD HH"),
-        minute : moment(recv).format("YYYY-MM-DD HH:mm"),*/
-        cdate   : moment(recv).format('YYYY-MM-DD HH:mm:ss')
-    };
-
-    //console.log('time:'+JSON.stringify( time));
-
-    var newDevice = new DeviceModel({
-        macAddr    : macAddress,
-        index      : index,
-        tag        : tag,
-        data       : data,
-        info       : info,
-        recv_at    : mRecv,
-        created_at : new Date(),
-        time:time
-    });
-
-    newDevice.save(function(err){
-        var now = moment().format('YYYY-MM-DD HH:mm:ss');
-        if(err){
-            console.log(now + ' Debug : Device save fail!');
-            return callback(err);
-        }
-        console.log(now + ' Debug : Device save success!');
-        return callback(err,"OK");
-    });
-};
 
 exports.findByMac = function (find_mac,callback) {
     if(find_mac.length>0){
@@ -196,7 +89,7 @@ function toFindDevices(json,calllback) {
 }
 
 function toFindLastDevice(json,calllback) {
-    DeviceModel.find(json).sort({recv_at: -1}).limit(1).exec(function(err,devices){
+    DeviceModel.find(json).sort({recv: -1}).limit(1).exec(function(err,devices){
         var now = moment().format('YYYY-MM-DD HH:mm:ss');
         if(err){
             console.log(now+'Debug deviceDbTools find Last Device By Unit -> err :'+err);
@@ -272,7 +165,7 @@ exports.findDevicesByDate = function (dateStr,mac,dateOption,order,calllback) {
     console.log( 'from :'+from );
 
     var json = {macAddr:mac,
-                recv_at:{
+                recv:{
                     $gte:from,
                     $lt:now
                 }
@@ -323,49 +216,7 @@ exports.getOptioDeviceList = function (devices,option) {
     return deviceList;
 };
 
-exports.updateDeviceTime = function (unitId,updateTime,calllback) {
-    //console.log('---updateDeviceTime ---------------------------------------');
-    //console.log('Debug : updateDeviceTime id='+unitId+" , time ="+time);
-    var time = {
-        date   : moment(updateTime).format("YYYY-MM-DD HH:mm:ss"),
-        /*year   : moment(updateTime).format("YYYY"),
-        month  : moment(updateTime).format("YYYY-MM"),
-        day    : moment(updateTime).format("YYYY-MM-DD"),
-        hour   : moment(updateTime).format("YYYY-MM-DD HH"),
-        minute : moment(updateTime).format("YYYY-MM HH:mm"),*/
-        cdate   : moment(updateTime).format("YYYY年MM月DD日 HH時mm分ss秒")
-    };
-    //console.log('Debug updateDeviceTime: time.date'+time.cdate);
-    DeviceModel.update({_id : unitId},
-        {time : time},
-        {safe : true, upsert : true},
-        (err, rawResponse)=>{
-            if (err) {
-                console.log('Debug updateDeviceTime : '+ err);
-                return calllback(err);
-            } else {
-                console.log('Debug updateDeviceTime : success');
-                return calllback(err,'success');
-            }
-        }
-    );
-};
 
-exports.updateDeviceData = function (unitId,json) {
-    console.log('---updateDeviceTime ---------------------------------------');
-    var time = moment().format('YYYY-MM-DD HH:mm:ss');
-    DeviceModel.update({_id : unitId},
-        json,
-        {safe : true, upsert : true},
-        (err, rawResponse)=>{
-            if (err) {
-                console.log(time+' Debug updateDeviceData : '+ err);
-            } else {
-                console.log(time+' Debug updateDeviceData : success');
-            }
-        }
-    );
-};
 
 exports.removeDevicesByDate = function (startDate,option,number,calllback) {
     //console.log('--removeDevicesByDate---------------------------------------');
@@ -392,7 +243,7 @@ exports.removeDevicesByDate = function (startDate,option,number,calllback) {
     //console.log( 'from :'+from );
 
     var json = {
-                recv_at:{
+                recv:{
                     $gte:from,
                     $lt:now
                 }
@@ -431,44 +282,5 @@ function isEmpty(obj) {
     return true && JSON.stringify(obj) === JSON.stringify({});
 }
 
-exports.saveTestDevice = function (macAddress,tag,info,recv,callback) {
-    var mRecv = new Date(recv);
 
-    var index = tag;
-
-    console.log('macAddress:'+macAddress);
-    console.log('mRecv:'+ mRecv);
-    console.log('info:'+JSON.stringify( info));
-
-    var time = {
-        date   : moment(recv).format('YYYY-MM-DD HH:mm:ss'),
-        /*year   : moment(recv).format("YYYY"),
-        month  : moment(recv).format("YYYY-MM"),
-        day    : moment(recv).format("YYYY-MM-DD"),
-        hour   : moment(recv).format("YYYY-MM-DD HH"),
-        minute : moment(recv).format("YYYY-MM-DD HH:mm"),*/
-        cdate   : moment(recv).format('YYYY-MM-DD HH:mm:ss')
-    };
-
-    //console.log('time:'+JSON.stringify( time));
-
-    var newDevice = new DeviceModel({
-        macAddr    : macAddress,
-        index      : index,
-        data       : null,
-        info       : info,
-        recv_at    : mRecv,
-        created_at : new Date(),
-        time:time
-    });
-
-    newDevice.save(function(err){
-        if(err){
-            console.log('Debug : Device save fail!');
-            return callback(err);
-        }
-        console.log('Debug : Device save success!');
-        return callback(err,info);
-    });
-};
 
